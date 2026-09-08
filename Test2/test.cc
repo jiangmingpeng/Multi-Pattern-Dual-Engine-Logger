@@ -428,43 +428,42 @@ namespace Constructor
 // }
 
 // 代理模式
-
-
-class RentHouse
+namespace Agent
 {
-public:
-    virtual void rentHouse() = 0;
-};
-
-class Landlord : public RentHouse
-{
-public:
-    using Ptr = std::shared_ptr<Landlord>;
-    void rentHouse() override {std::cout<<"把房子租出去"<<std::endl;}
-};
-
-
-class Intermediary : public Landlord
-{
-public:
-    Intermediary():_ld(new Landlord()){}    
-    void rentHouse() override 
+    class RentHouse
     {
-        std::cout<<"进行房子宣传"<<std::endl;
-        std::cout<<"带人看房"<<std::endl;
-        _ld->rentHouse();
-        std::cout<<"进行房子售后维修"<<std::endl;
-    }
-private:
-    Ptr _ld;
-};
+    public:
+        virtual void rentHouse() = 0;
+    };
 
+    class Landlord : public RentHouse
+    {
+    public:
+        using Ptr = std::shared_ptr<Landlord>;
+        void rentHouse() override { std::cout << "把房子租出去" << std::endl; }
+    };
 
-int main()
-{
-    Intermediary td;
-    td.rentHouse();
+    class Intermediary : public Landlord
+    {
+    public:
+        Intermediary() : _ld(new Landlord()) {}
+        void rentHouse() override
+        {
+            std::cout << "进行房子宣传" << std::endl;
+            std::cout << "带人看房" << std::endl;
+            _ld->rentHouse();
+            std::cout << "进行房子售后维修" << std::endl;
+        }
 
-
-    return 0;
+    private:
+        Ptr _ld;
+    };
 }
+
+// int main()
+// {
+//     Intermediary td;
+//     td.rentHouse();
+
+//     return 0;
+// }

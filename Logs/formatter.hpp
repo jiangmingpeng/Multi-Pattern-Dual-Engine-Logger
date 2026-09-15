@@ -70,7 +70,7 @@ namespace MPLog
         }
         virtual void format(std::ostream &os, const Message &msg)
         {
-            time_t t = msg._time;
+            time_t t = msg._time/1000;//注意time_t 记得是秒 这里在获取的时候是毫秒所以要注意
             struct tm lt;
             localtime_r(&t, &lt); // 输入输出型参数 出来之后结构体tm的成员就已经被时间戳转化为年月日等一系列时间
             char tmp[128];
@@ -132,7 +132,7 @@ namespace MPLog
     {
 
     public:
-        Formatter(const std::string &pattern = "[%d{%H:%M:%S}][%t][%p][%c][%f:%l] %m%n")
+        Formatter(const std::string &pattern = "[%d{%H:%M:%S}][%t][%c][%f:%l][%p] %m%n")
             : _pattern(pattern)
         {
             assert(parsePattern());
@@ -149,6 +149,7 @@ namespace MPLog
             std::stringstream str;
             for (auto &item : _items)
             {
+                // std::cout<<"Debug";
                 item->format(str, msg);
             }
             return str.str(); // 注意是stringstream对象的成员函数 是str()来实现对string的转化
@@ -208,12 +209,13 @@ namespace MPLog
         //_pattern = [%d{%H:%M:%S}][%t][%p][%c][%f:%l] %m%n
         bool parsePattern() // 对输出串进行格式化的核心函数
         {
+            _items.clear();
             bool sub_format_error = false;
             std::vector<std::tuple<std::string, std::string, int>> arr; // 用来存储每一段格式化的 格式字符 子字符 类型
             std::string _key, _val, _row;                               // 用来存储格式化字符、子格式、普通字符
             int size = _pattern.size();
             int pos = 0;
-            while (_pattern[pos] < size)
+            while (pos < size)
             {
                 if (_pattern[pos] != '%')
                 {
@@ -276,7 +278,7 @@ namespace MPLog
                 arr.push_back(std::make_tuple(_key, _val, ItemType::FormatSpec));
             for (auto &it : arr)//对每一个元组进行成员提取
             {
-                if (std::get<2>(it) == 0)//判断是什么字符类型 普通还是格式化的 --是普通的
+                if (std::get<2>(it) == ItemType::RawText)//判断是什么字符类型 普通还是格式化的 --是普通的
                 {
                     FormatItem::Ptr fi(new OtherFormatItem(std::get<0>(it)));
                     _items.push_back(fi);//这个函数的前面的所有工作都是为了这一步 服务的

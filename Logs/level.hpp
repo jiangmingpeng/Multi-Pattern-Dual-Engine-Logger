@@ -2,6 +2,8 @@
 #include <iostream> 
 #include <string>
 
+
+//这个日志等级其实主要起到的作用是 承担起日志消息类的完善
 namespace MPLog
 {
     class Level

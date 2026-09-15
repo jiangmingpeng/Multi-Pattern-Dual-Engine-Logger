@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 #include <filesystem>
 
+
+//这个获取时间 文件操作主要起到的作用是 承担起日志消息类的完善
 namespace MPLog
 {
     namespace util // 实用类设计

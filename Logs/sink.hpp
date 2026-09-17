@@ -18,7 +18,7 @@ namespace MPLog
     public:
         using Ptr =  std::shared_ptr<LogSink>;
         LogSink (){}
-        virtual ~LogSink() = 0;//这个析构进行多态的重写 实质上是让派生类都使用默认析构
+        virtual ~LogSink() = default;//这个析构进行多态的重写 实质上是让派生类都使用默认析构
         virtual void log(const char* data,size_t len) = 0;//重写这个日志主内容的写入
     };
 
@@ -26,10 +26,7 @@ namespace MPLog
     {   
     public:
         using Ptr = std::shared_ptr<StdoutSink>;
-        StdoutSink()
-        {
-
-        }
+        StdoutSink() = default;
         void log(const char* data,size_t len) override
         {
             std::cout.write(data,len);//以原始字符串的方式 输出到用户态缓冲区
@@ -70,16 +67,46 @@ namespace MPLog
         ,_max_fsize(max_size)
         ,_cur_fsize(0)
         {
-            
+            util::file::CreateDir(util::file::GetFilePath(basename));
         }
         void log(const char* data,size_t len) override
         {
+            InitLogFile();
+            _ofs.write(data,len);
+            if(!_ofs.good())
+            {
+                std::cout<<"内容写入文件失败!!!"<<std::endl;
+            }
+            _cur_fsize+=len;
 
         }
     private:
-        void CreateFile()
+        void InitLogFile()
         {
-            
+            if(!_ofs.is_open()||_cur_fsize>=_max_fsize)
+            {
+                _ofs.close();
+                std::string newfile = CreateFilename();
+                _ofs.open(newfile,std::ios::binary|std::ios::app);
+                assert(!_ofs.is_open());
+                _cur_fsize = 0;//每次创建新文件的时候要把当前的容量大小清零
+            }
+        }
+        std::string CreateFilename()
+        {
+            time_t tm = util::Date::GetNowTime()/1000;
+            struct tm t;
+            std::stringstream ss;
+            localtime_r(&tm,&t);
+            ss<<_basename;
+            ss<<t.tm_year+1900;
+            ss<<t.tm_mon+1;
+            ss<<t.tm_mday;
+            ss<<t.tm_hour;
+            ss<<t.tm_min;
+            ss<<t.tm_sec;
+            ss<<".log.txt";
+            return ss.str();
         }
     private:
 
@@ -87,6 +114,16 @@ namespace MPLog
         std::ofstream _ofs;
         size_t _max_fsize;
         size_t _cur_fsize;
+    };
+
+    class SinkFactory//简单工厂的设计模式
+    {
+    public:
+        template<typename SinkType,typename ...Args>
+        static LogSink::Ptr create(Args&& ... args) //创建基类指针 来指向派生类 参数用万能引用
+        {
+            return  std::make_shared<SinkType>(std::forward<Args>(args)...);
+        }
     };
 };
 

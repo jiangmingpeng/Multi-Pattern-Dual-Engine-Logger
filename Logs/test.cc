@@ -1,5 +1,7 @@
 #include "util.hpp"
 #include "formatter.hpp"
+#include "sink.hpp"
+#include <cstring>
 
 int main()
 {
@@ -10,5 +12,12 @@ int main()
     std::string message = ft.format(msg);
     std::cout<<message;
     // std::cout << "After format call" << std::endl;
+
+
+    MPLog::SinkFactory sf;
+    // MPLog::LogSink::Ptr lp = sf.create<MPLog::StdoutSink>();
+    MPLog::LogSink::Ptr lp = sf.create<MPLog::FileSink>("test_one");//------这里 还有点问题
+    const char data[] = "This is a test msg!!!!!";//改成const char* 也可以 后面就改strlen(不包括\0)
+    lp->log(data,sizeof(data));
     return 0;
 }
